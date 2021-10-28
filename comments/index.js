@@ -7,6 +7,14 @@ const app = express();
 
 const commentsByPostId = {};
 
+process.on("unhandledRejection", (reason, promise) => {
+  require("fs").writeFileSync(
+    "./1.json",
+    JSON.stringify({ ...reason }),
+    { encoding: "utf-8" }
+  );
+});
+
 app.use(express.json());
 app.use(cors());
 
@@ -22,7 +30,7 @@ app.post("/posts/:id/comments", async (req, res) => {
   comments.push({ id: commentId, content, status: "pending" });
   commentsByPostId[req.params.id] = comments;
 
-  await axios.post("http://event-bus-srv/events", {
+  await axios.post("http://event-bus-srv:4005/events", {
     type: "CommentCreated",
     data: {
       id: commentId,
@@ -47,7 +55,7 @@ app.post("/events", async (req, res) => {
     const comment = comments.find((comment) => comment.id === id);
     comment.status = status;
 
-    await axios.post("http://event-bus-srv/events", {
+    await axios.post("http://event-bus-srv:4005/events", {
       type: "CommentUpdated",
       data: {
         id,
@@ -62,5 +70,5 @@ app.post("/events", async (req, res) => {
 });
 
 app.listen(4001, () => {
-  console.log("Comments server started at 4001");
+  console.log("1. Comments server started at 4001");
 });
